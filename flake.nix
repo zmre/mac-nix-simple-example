@@ -12,6 +12,9 @@
     # Controls system level software and settings including fonts
     darwin.url = "github:lnl7/nix-darwin";
     darwin.inputs.nixpkgs.follows = "nixpkgs";
+
+    # Tricked out nvim
+    pwnvim.url = "github:zmre/pwnvim";
   };
   outputs = inputs: {
     darwinConfigurations.Demos-Virtual-Machine =
@@ -25,6 +28,8 @@
             environment.shells = [ pkgs.bash pkgs.zsh ];
             environment.loginShell = pkgs.zsh;
             environment.systemPackages = [ pkgs.coreutils ];
+            environment.systemPath = [ "/opt/homebrew/bin" ];
+            environment.pathsToLink = [ "/Applications" ];
             nix.extraOptions = ''
               experimental-features = nix-command flakes
             '';
@@ -42,6 +47,15 @@
             system.defaults.NSGlobalDomain.KeyRepeat = 1;
             # backwards compat; don't change
             system.stateVersion = 4;
+            homebrew = {
+              enable = true;
+              caskArgs.no_quarantine = true;
+              global.brewfile = true;
+              masApps = { };
+              casks = [ "raycast" "amethyst" ];
+              taps = [ "fujiapple852/trippy" ];
+              brews = [ "trippy" ];
+            };
           })
           inputs.home-manager.darwinModules.home-manager
           {
@@ -53,7 +67,13 @@
                   # Don't change this when you change package input. Leave it alone.
                   home.stateVersion = "22.11";
                   # specify my home-manager configs
-                  home.packages = [ pkgs.ripgrep pkgs.fd pkgs.curl pkgs.less ];
+                  home.packages = [
+                    pkgs.ripgrep
+                    pkgs.fd
+                    pkgs.curl
+                    pkgs.less
+                    inputs.pwnvim.packages."aarch64-darwin".default
+                  ];
                   home.sessionVariables = {
                     PAGER = "less";
                     CLICLOLOR = 1;
@@ -77,6 +97,16 @@
                     settings.font.normal.family = "MesloLGS Nerd Font Mono";
                     settings.font.size = 16;
                   };
+                  home.file.".inputrc".text = ''
+                    set show-all-if-ambiguous on
+                    set completion-ignore-case on
+                    set mark-directories on
+                    set mark-symlinked-directories on
+                    set match-hidden-files off
+                    set visible-stats on
+                    set keymap vi
+                    set editing-mode vi-insert
+                  '';
                 })
               ];
             };
